@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Detectives: Spot the Trap!</title>
+  <!-- Load Tailwind CSS for responsive layout & utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Google Fonts: Plus Jakarta Sans (clean readability) & JetBrains Mono (URLs/code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Base typography & custom cyber-detective academy styling */
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #090e1a;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        linear-gradient(rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      color: #f8fafc;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Tactile 3D arcade/detective buttons */
+    .btn-trap {
+      background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%);
+      box-shadow: 0 6px 0 #9f1239, 0 12px 24px rgba(225, 29, 72, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+    }
+    .btn-trap:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #9f1239, 0 16px 28px rgba(225, 29, 72, 0.45);
+    }
+    .btn-trap:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #9f1239, 0 6px 12px rgba(225, 29, 72, 0.3);
+    }
+
+    .btn-safe {
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 6px 0 #065f46, 0 12px 24px rgba(16, 185, 129, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+    }
+    .btn-safe:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #065f46, 0 16px 28px rgba(16, 185, 129, 0.45);
+    }
+    .btn-safe:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #065f46, 0 6px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #22d3ee 0%, #0284c7 100%);
+      box-shadow: 0 5px 0 #0369a1, 0 10px 20px rgba(34, 211, 238, 0.3);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+    }
+    .btn-primary:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+    }
+    .btn-primary:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #0369a1;
+    }
+
+    /* Magnifying Glass Clue Highlight Effect */
+    .clue-target {
+      transition: all 0.35s ease;
+      border-radius: 0.5rem;
+    }
+    .hint-active .clue-target {
+      background-color: rgba(250, 204, 21, 0.28);
+      outline: 3px dashed #f59e0b;
+      outline-offset: 3px;
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.45);
+      animation: cluePulse 1.4s infinite ease-in-out;
+    }
+
+    @keyframes cluePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.015); }
+    }
+
+    /* Shield break & shake animations */
+    @keyframes shieldShake {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-6px) rotate(-8deg); }
+      40% { transform: translateX(6px) rotate(8deg); }
+      60% { transform: translateX(-4px) rotate(-4deg); }
+      80% { transform: translateX(4px) rotate(4deg); }
+    }
+    .animate-shield-break {
+      animation: shieldShake 0.5s ease-in-out;
+    }
+
+    /* Card entrance transition */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-enter {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Simulated flashing banner for fake virus ad */
+    @keyframes urgentBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .animate-urgent-blink {
+      animation: urgentBlink 1s infinite;
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between selection:bg-cyan-400 selection:text-slate-950">
+
+  <!-- ==================== TOP HUD HEADER ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-cyan-500/25 shadow-lg">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand / Academy Logo -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/30 text-slate-950 font-extrabold text-xl">
+          🕵️
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">
+            CODE <span class="text-cyan-400">DETECTIVES</span>
+          </h1>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">
+            Spot the Trap! • 5th Grade Mission
+          </p>
+        </div>
+      </div>
+
+      <!-- Gameplay Status Pills (Hidden on Title Screen) -->
+      <div id="hud-stats" class="hidden flex-wrap items-center gap-2 sm:gap-4">
+        <!-- Case Counter -->
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
+          <span class="text-xs font-bold uppercase text-slate-400">Case</span>
+          <span id="hud-case-counter" class="text-sm sm:text-base font-extrabold text-cyan-300">1 of 10</span>
+        </div>
+
+        <!-- Score Counter -->
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
+          <span class="text-xs font-bold uppercase text-slate-400">Score</span>
+          <span id="hud-score" class="text-sm sm:text-base font-extrabold text-amber-300">0</span>
+        </div>
+
+        <!-- 3 Cyber Shields -->
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-1.5 flex items-center gap-1.5" title="Your 3 Cyber Shields">
+          <span class="text-xs font-bold uppercase text-slate-400 hidden md:inline mr-1">Shields</span>
+          <div id="shields-container" class="flex items-center gap-1">
+            <!-- Rendered dynamically via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Utility Controls: 5 Red Flags Guide + Sound Toggle -->
+      <div class="flex items-center gap-2">
+        <button
+          id="btn-open-guide"
+          type="button"
+          class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/40 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <span>🚩</span>
+          <span>5 Red Flags Guide</span>
+        </button>
+
+        <button
+          id="btn-sound-toggle"
+          type="button"
+          aria-label="Toggle Sound Effects"
+          class="bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 rounded-xl p-2 text-base transition cursor-pointer"
+          title="Toggle Sound Effects"
+        >
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Visual Case Progress Bar (Visible during gameplay) -->
+    <div id="hud-progress-wrapper" class="hidden w-full bg-slate-950 h-1.5">
+      <div id="hud-progress-bar" class="bg-gradient-to-r from-cyan-400 to-emerald-400 h-1.5 transition-all duration-500" style="width: 10%;"></div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <main class="flex-1 w-full max-w-4xl mx-auto px-4 py-6 sm:py-8 flex flex-col justify-center">
+
+    <!-- 1. START / BRIEFING SCREEN -->
+    <section id="screen-start" class="animate-enter bg-slate-900/85 border border-cyan-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl text-center">
+      <div class="inline-flex items-center gap-2 bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full mb-5">
+        <span>🛡️</span>
+        <span>DIGITAL CITIZENSHIP TRAINING SIMULATION</span>
+      </div>
+
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+        Code Detectives: <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-emerald-300">Spot the Trap!</span>
+      </h2>
+
+      <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+        Welcome, Agent! Cyber-tricksters hide phishing links, scams, and fake "free" prizes across games, emails, and websites. Inspect <strong class="text-white">10 real-world digital cases</strong> and decide: is it a <span class="text-rose-400 font-bold">TRAP</span> or is it <span class="text-emerald-400 font-bold">SAFE</span>?
+      </p>
+
+      <!-- Quick Mission Briefing Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8 text-left">
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+          <div class="text-2xl mb-1.5">🔍</div>
+          <h3 class="font-bold text-white text-sm sm:text-base">Inspect Every Clue</h3>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Check URLs, spelling, and sender names. Use the <strong class="text-amber-300">Magnifying Glass</strong> if you need a hint!</p>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+          <div class="text-2xl mb-1.5">🛡️</div>
+          <h3 class="font-bold text-white text-sm sm:text-base">Protect Your 3 Shields</h3>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">You start with 3 Cyber Shields. Even if they break, Backup Shield Mode lets you finish all 10 cases!</p>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4">
+          <div class="text-2xl mb-1.5">🏆</div>
+          <h3 class="font-bold text-white text-sm sm:text-base">Earn Your Rank</h3>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Solve 9–10 cases accurately to earn the rank of <strong class="text-cyan-300">Master Code Detective</strong>!</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button
+          id="btn-start-game"
+          type="button"
+          class="btn-primary w-full sm:w-auto px-8 py-4 rounded-2xl text-slate-950 font-extrabold text-lg sm:text-xl tracking-wide cursor-pointer flex items-center justify-center gap-2.5"
+        >
+          <span>🚀</span>
+          <span>START MISSION (10 CASES)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. ACTIVE GAMEPLAY SCREEN -->
+    <section id="screen-game" class="hidden animate-enter space-y-5">
+
+      <!-- Backup Shield Mode Banner (Appears if all 3 shields break) -->
+      <div id="backup-shield-banner" class="hidden bg-indigo-950/90 border border-indigo-400/50 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-lg">
+        <span class="text-2xl">🔋</span>
+        <div class="text-xs sm:text-sm">
+          <p class="font-extrabold text-indigo-200">BACKUP SHIELD MODE ACTIVATED!</p>
+          <p class="text-indigo-300">Your main shields cracked, so Academy HQ deployed an emergency shield. Finish all 10 cases to master every clue!</p>
+        </div>
+      </div>
+
+      <!-- Case Header & Magnifying Glass Hint Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3">
+        <div class="flex items-center gap-2.5">
+          <span id="case-context-badge" class="bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-lg">
+            Browser Pop-Up
+          </span>
+          <span class="text-xs sm:text-sm text-slate-400 font-medium hidden sm:inline">
+            Examine the screen carefully before choosing!
+          </span>
+        </div>
+
+        <button
+          id="btn-hint"
+          type="button"
+          class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer"
+        >
+          <span>🔍</span>
+          <span id="btn-hint-text">Magnifying Glass Hint</span>
+        </button>
+      </div>
+
+      <!-- Hint Message Box (Revealed when Magnifying Glass is clicked) -->
+      <div id="hint-banner" class="hidden bg-amber-950/80 border-2 border-amber-400/70 rounded-2xl px-4 py-3 flex items-start gap-3 text-amber-100 shadow-lg">
+        <span class="text-xl mt-0.5">🔎</span>
+        <div class="text-xs sm:text-sm leading-relaxed">
+          <span class="font-extrabold text-amber-300 uppercase tracking-wide block mb-0.5">Detective Lens Clue:</span>
+          <p id="hint-text"></p>
+        </div>
+      </div>
+
+      <!-- SIMULATED DEVICE VIEWPORT (Light high-contrast UI inside dark cyber frame) -->
+      <div id="device-wrapper" class="bg-slate-800/90 p-2.5 sm:p-4 rounded-3xl border-2 border-slate-700 shadow-2xl transition-all">
+        <div id="device-viewport" class="bg-white text-slate-900 rounded-2xl overflow-hidden shadow-inner border border-slate-300">
+          <!-- Dynamic simulated screen content injected here -->
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS: IT'S A TRAP vs IT'S SAFE -->
+      <div id="action-buttons-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+        <button
+          id="btn-choose-trap"
+          type="button"
+          class="btn-trap w-full py-4 sm:py-5 px-6 rounded-2xl text-white font-extrabold text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 cursor-pointer"
+        >
+          <span class="text-2xl">🚨</span>
+          <span>IT'S A TRAP!</span>
+        </button>
+
+        <button
+          id="btn-choose-safe"
+          type="button"
+          class="btn-safe w-full py-4 sm:py-5 px-6 rounded-2xl text-white font-extrabold text-lg sm:text-xl tracking-wide flex items-center justify-center gap-3 cursor-pointer"
+        >
+          <span class="text-2xl">✅</span>
+          <span>IT'S SAFE!</span>
+        </button>
+      </div>
+
+      <!-- IMMEDIATE FEEDBACK CARD (Appears after player selects an answer) -->
+      <div id="feedback-card" class="hidden animate-enter rounded-3xl p-5 sm:p-6 border-2 shadow-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div id="feedback-icon" class="text-3xl sm:text-4xl shrink-0 mt-0.5">🎯</div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h3 id="feedback-title" class="text-lg sm:text-xl font-extrabold">Spot On, Detective!</h3>
+                <span id="feedback-badge" class="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full"></span>
+              </div>
+              <p id="feedback-explanation" class="text-sm sm:text-base leading-relaxed"></p>
+            </div>
+          </div>
+
+          <button
+            id="btn-next-case"
+            type="button"
+            class="btn-primary shrink-0 px-6 py-3.5 rounded-2xl text-slate-950 font-extrabold text-base sm:text-lg flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span id="btn-next-text">Next Case</span>
+            <span>➡️</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 3. END SCREEN ("DETECTIVE MISSION COMPLETE!") -->
+    <section id="screen-end" class="hidden animate-enter bg-slate-900/90 border border-cyan-500/35 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center gap-2 bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full">
+          <span>🎉</span>
+          <span>DETECTIVE MISSION COMPLETE!</span>
+        </div>
+
+        <!-- Earned Rank Badge -->
+        <div id="end-rank-card" class="max-w-md mx-auto bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-cyan-400/50 rounded-3xl p-6 shadow-xl mt-4">
+          <div id="end-rank-icon" class="text-5xl sm:text-6xl mb-2">🏆</div>
+          <p class="text-xs font-bold uppercase tracking-widest text-cyan-400">Official Academy Rank Earned</p>
+          <h2 id="end-rank-title" class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Master Code Detective</h2>
+          <p id="end-rank-message" class="text-xs sm:text-sm text-slate-300 mt-2"></p>
+        </div>
+
+        <!-- Score & Shields Summary -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-xl mx-auto pt-3">
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3.5">
+            <p class="text-xs font-bold uppercase text-slate-400">Cases Solved</p>
+            <p id="end-score-fraction" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-0.5">10 / 10</p>
+          </div>
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3.5">
+            <p class="text-xs font-bold uppercase text-slate-400">Detective Points</p>
+            <p id="end-total-points" class="text-2xl sm:text-3xl font-extrabold text-amber-300 mt-0.5">1000</p>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-slate-800/90 border border-slate-700 rounded-2xl p-3.5">
+            <p class="text-xs font-bold uppercase text-slate-400">Shields Left</p>
+            <p id="end-shields-left" class="text-2xl sm:text-3xl font-extrabold text-cyan-300 mt-0.5">3 / 3</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case-by-Case Review List -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
+            <span>📋</span>
+            <span>Case File Debrief & Review</span>
+          </h3>
+          <span class="text-xs text-slate-400 font-semibold">Review every clue below</span>
+        </div>
+
+        <div id="end-review-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+          <!-- Populated dynamically with all 10 cases -->
+        </div>
+      </div>
+
+      <!-- Replay Button -->
+      <div class="text-center pt-2">
+        <button
+          id="btn-play-again"
+          type="button"
+          class="btn-primary w-full sm:w-auto px-8 py-4 rounded-2xl text-slate-950 font-extrabold text-lg tracking-wide cursor-pointer inline-flex items-center justify-center gap-2.5"
+        >
+          <span>🔄</span>
+          <span>Play Again (Shuffle Cases)</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== 5 RED FLAGS QUICK REFERENCE MODAL ==================== -->
+  <div id="modal-red-flags" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-amber-400/50 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 shadow-2xl animate-enter">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl sm:text-3xl">🚩</span>
+          <div>
+            <h2 class="text-lg sm:text-2xl font-extrabold text-white">The 5 Red Flags Guide</h2>
+            <p class="text-xs sm:text-sm text-slate-400">Spot these 5 clues to catch cyber-tricksters!</p>
+          </div>
+        </div>
+        <button
+          id="btn-close-guide"
+          type="button"
+          class="bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl px-3.5 py-2 font-bold text-sm cursor-pointer"
+        >
+          ✕ Close
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Flag 1 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 flex items-start gap-3">
+          <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 font-extrabold flex items-center justify-center shrink-0">1</span>
+          <div>
+            <h3 class="font-extrabold text-amber-300 text-sm sm:text-base">Too Good to Be True</h3>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Promises of 10,000 FREE gems, free consoles, or secret rare skins. Real companies don't give away huge prizes on random pop-ups.</p>
+          </div>
+        </div>
+
+        <!-- Flag 2 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 flex items-start gap-3">
+          <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 font-extrabold flex items-center justify-center shrink-0">2</span>
+          <div>
+            <h3 class="font-extrabold text-amber-300 text-sm sm:text-base">Rush or Panic</h3>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Countdown clocks (<code>00:15</code>) or scary warnings ("Your computer has 12 viruses!") designed to make you panic and click without thinking.</p>
+          </div>
+        </div>
+
+        <!-- Flag 3 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 flex items-start gap-3">
+          <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 font-extrabold flex items-center justify-center shrink-0">3</span>
+          <div>
+            <h3 class="font-extrabold text-amber-300 text-sm sm:text-base">Tricky URLs</h3>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Look-alike web addresses such as <code class="text-rose-300">netfIix-verify-help.com</code> (using a capital <strong>I</strong> instead of an <strong>l</strong>) or strange <code>.xyz</code> links.</p>
+          </div>
+        </div>
+
+        <!-- Flag 4 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 flex items-start gap-3">
+          <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 font-extrabold flex items-center justify-center shrink-0">4</span>
+          <div>
+            <h3 class="font-extrabold text-amber-300 text-sm sm:text-base">Spelling Mistakes</h3>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Sloppy spelling like <em>"WARNNING! Downlaod now!"</em> Real tech and game companies carefully proofread their messages.</p>
+          </div>
+        </div>
+
+        <!-- Flag 5 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 flex items-start gap-3">
+          <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 font-extrabold flex items-center justify-center shrink-0">5</span>
+          <div>
+            <h3 class="font-extrabold text-amber-300 text-sm sm:text-base">Asking for Secrets</h3>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Anyone asking for your password, home address, phone number, or credit card info. Real moderators NEVER ask for your password.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 text-right">
+        <button
+          id="btn-close-guide-bottom"
+          type="button"
+          class="btn-primary px-6 py-2.5 rounded-xl text-slate-950 font-extrabold text-sm cursor-pointer"
+        >
+          Got It, Back to Mission!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="text-center text-xs text-slate-500 py-4 px-4">
+    Code Detectives Academy • 5th Grade Digital Citizenship Interactive Lab
+  </footer>
+
+  <!-- ==================== JAVASCRIPT GAME ENGINE ==================== -->
+  <script>
+    /**
+     * Synthesized Sound Effects Engine (Web Audio API)
+     * Generates clean chimes without relying on external audio files.
+     */
+    class SoundFX {
+      constructor() {
+        this.enabled = true;
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type, duration, startTime = 0, gainVal = 0.14) {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime + startTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(gainVal, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration);
+        } catch (e) {
+          // Safely ignore audio restrictions if blocked
+        }
+      }
+
+      click() {
+        this.playTone(520, 'sine', 0.08, 0, 0.1);
+      }
+
+      hint() {
+        this.playTone(660, 'triangle', 0.12, 0, 0.12);
+        this.playTone(880, 'triangle', 0.18, 0.09, 0.12);
+      }
+
+      correct() {
+        this.playTone(523.25, 'triangle', 0.14, 0, 0.15);     // C5
+        this.playTone(659.25, 'triangle', 0.14, 0.1, 0.15);   // E5
+        this.playTone(783.99, 'triangle', 0.28, 0.2, 0.16);   // G5
+      }
+
+      wrong() {
+        this.playTone(240, 'sawtooth', 0.18, 0, 0.12);
+        this.playTone(185, 'sawtooth', 0.28, 0.14, 0.12);
+      }
+
+      victory() {
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((n, idx) => {
+          this.playTone(n, 'triangle', 0.22, idx * 0.11, 0.15);
+        });
+      }
+    }
+
+    const sfx = new SoundFX();
+
+    /**
+     * All 10 Age-Appropriate 5th-Grade Digital Citizenship Cases
+     * Each case includes a custom renderer function to build a realistic device frame.
+     */
+    const CASES_DATA = [
+      {
+        id: 1,
+        contextLabel: "Web Browser Pop-Up",
+        isTrap: true,
+        shortTitle: "Visitor #1,000,000 Free Gems Pop-Up",
+        hint: "Look closely at the website address at the top, the huge free prize promise, and the ticking 00:15 timer!",
+        feedback: "TRAP! Red Flags #1 & #2: Too good to be true + a fake countdown timer trying to make you panic and click fast.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="clue-target flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-rose-700 border border-slate-300 flex items-center gap-2">
+              <span title="Not Secure">⚠️</span>
+              <span>www.mega-prizes-win.xyz</span>
+            </div>
+          </div>
+          <div class="p-6 sm:p-8 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100 text-center space-y-4">
+            <div class="inline-block bg-rose-600 text-white text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full animate-bounce">
+              🎉 CONGRATULATIONS! 🎉
+            </div>
+            <h4 class="text-xl sm:text-2xl font-extrabold text-slate-900">
+              You are Visitor #1,000,000!
+            </h4>
+            <p class="clue-target inline-block px-3 py-1.5 text-base sm:text-lg font-bold text-slate-800">
+              Click <span class="text-emerald-700 underline">CLAIM NOW</span> to get <span class="bg-amber-300 px-2 py-0.5 rounded font-extrabold">10,000 FREE Gems</span>!
+            </p>
+            <div class="clue-target max-w-xs mx-auto bg-slate-900 text-white rounded-xl py-2.5 px-4 flex items-center justify-center gap-2 shadow">
+              <span class="text-lg">⏳</span>
+              <span class="text-xs uppercase font-bold text-slate-300">Offer expires in:</span>
+              <span id="case1-timer" class="font-mono-code text-lg font-extrabold text-rose-400">00:15</span>
+            </div>
+            <div class="pt-1">
+              <span class="inline-block bg-emerald-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow pointer-events-none select-none">
+                CLAIM NOW ➔
+              </span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        contextLabel: "Tablet App Store",
+        isTrap: false,
+        shortTitle: "Official App Store Update (Math Quest v2.4)",
+        hint: "Check where this notification is coming from (your tablet's official App Store) and notice who it suggests asking first.",
+        feedback: "SAFE! All clear: Updates inside your device's official App Store are safe—just check with a trusted adult first.",
+        renderViewport: () => `
+          <div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+            <div class="clue-target flex items-center gap-2 px-2 py-0.5">
+              <span class="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center text-xs font-bold">A</span>
+              <span class="font-bold text-slate-800 text-sm">Official Tablet App Store</span>
+              <span class="bg-blue-100 text-blue-700 text-[11px] font-extrabold px-2 py-0.5 rounded-full">✓ Verified Store</span>
+            </div>
+            <span class="text-xs text-slate-500 font-semibold">Updates Tab</span>
+          </div>
+          <div class="p-6 sm:p-8 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              🧮
+            </div>
+            <div class="flex-1 text-center sm:text-left space-y-2">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <h4 class="text-lg sm:text-xl font-extrabold text-slate-900">Update Available: Math Quest v2.4</h4>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-0.5 rounded-md">42 MB</span>
+              </div>
+              <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+                Includes bug fixes and new levels for 5th Grade Fractions.
+              </p>
+              <div class="clue-target inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl">
+                <span>👨‍👩‍👧</span>
+                <span>Ask a parent or teacher before installing.</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        contextLabel: "In-Game Direct Chat",
+        isTrap: true,
+        shortTitle: "Game Chat from Admin_Helper_01",
+        hint: "Read what Admin_Helper_01 is asking you to reply with. Would a real game moderator ever need this?",
+        feedback: "TRAP! Red Flag #5 (Asking for Secrets): Real game moderators and admins will NEVER ask for your password.",
+        renderViewport: () => `
+          <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span class="font-bold text-sm">Kingdom Builders — Direct Whisper Chat</span>
+            </div>
+            <span class="text-xs text-slate-400">Lobby #42</span>
+          </div>
+          <div class="p-5 sm:p-7 bg-slate-50 space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-extrabold flex items-center justify-center shrink-0">
+                🛡️
+              </div>
+              <div class="flex-1 bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-purple-700 text-sm">Admin_Helper_01</span>
+                  <span class="text-[11px] bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded">Player</span>
+                  <span class="text-xs text-slate-400">Just now</span>
+                </div>
+                <p class="text-sm sm:text-base text-slate-800 leading-relaxed">
+                  Hi! We are giving free legendary armor to top players today.
+                  <span class="clue-target font-bold text-rose-700 px-1">Reply with your username and password</span>
+                  so we can add it to your account!
+                </p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        contextLabel: "Email Inbox Viewer",
+        isTrap: true,
+        shortTitle: "Email from netfIix-verify-help.com",
+        hint: "Inspect every single letter in the sender's email address and check what private payment info it demands.",
+        feedback: "TRAP! Red Flags #3 & #5: Look closely at the tricky URL (`netfIix` with a capital I) and never share private payment info!",
+        renderViewport: () => `
+          <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 space-y-1.5 text-xs sm:text-sm">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-bold text-slate-500 w-14">From:</span>
+              <span class="clue-target font-mono-code bg-white border border-slate-300 px-2.5 py-0.5 rounded text-slate-900 font-bold">
+                security@netf<span class="text-rose-600 underline">I</span>ix-verify-help.com
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-500 w-14">Subject:</span>
+              <span class="font-extrabold text-slate-900">⚠️ Urgent: Family Account Problem</span>
+            </div>
+          </div>
+          <div class="p-5 sm:p-7 bg-white space-y-4">
+            <p class="text-sm sm:text-base text-slate-800 leading-relaxed">
+              Hello Customer,
+            </p>
+            <p class="text-sm sm:text-base text-slate-800 leading-relaxed">
+              Your family's account has a problem.
+              <span class="clue-target font-bold text-rose-700 px-1">Click here and type your parent's credit card number</span>
+              to fix it right away.
+            </p>
+            <div>
+              <span class="inline-block bg-rose-600 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg pointer-events-none select-none">
+                Update Payment Info
+              </span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 5,
+        contextLabel: "School Browser Window",
+        isTrap: false,
+        shortTitle: "Oakridge School Library Portal (.edu)",
+        hint: "Check the secure padlock icon, the official `.edu` school domain, and whether it asks for any secret information.",
+        feedback: "SAFE! All clear: You are on your school's official `.edu` website and it isn't asking for secret passwords.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="clue-target flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-emerald-800 border border-emerald-300 flex items-center gap-2">
+              <span title="Secure HTTPS">🔒</span>
+              <span>https://library.oakridge<strong class="text-emerald-700">.edu</strong></span>
+            </div>
+          </div>
+          <div class="p-6 sm:p-8 bg-gradient-to-r from-sky-50 to-indigo-50 space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📚</span>
+              <div>
+                <h4 class="text-lg sm:text-xl font-extrabold text-slate-900">Oakridge Elementary Digital Library</h4>
+                <p class="text-xs font-bold text-sky-700 uppercase">Official School Reading Portal</p>
+              </div>
+            </div>
+            <p class="text-sm sm:text-base text-slate-700 leading-relaxed pt-1">
+              Welcome back, 5th Grade Reader! Search for your next favorite book or check your library due dates.
+            </p>
+            <div class="pt-1 flex flex-wrap gap-2">
+              <span class="bg-sky-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg">🔎 Browse 5th Grade Books</span>
+              <span class="bg-white border border-slate-300 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-lg">📅 View Due Dates</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 6,
+        contextLabel: "Flashing Website Banner",
+        isTrap: true,
+        shortTitle: "Fake Virus Warning & Super_Fixer.exe",
+        hint: "Look closely at how words like 'WARNNING', 'virusses', and 'Downlaod' are spelled, plus the `.exe` file!",
+        feedback: "TRAP! Red Flag #4 (Spelling Mistakes) & Malware Trap: Fake virus alerts use bad spelling and try to trick you into downloading harmful `.exe` files.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-slate-700 border border-slate-300 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>www.free-cartoons-now.net</span>
+            </div>
+          </div>
+          <div class="p-6 sm:p-8 bg-rose-50 border-t-4 border-rose-600 text-center space-y-4">
+            <div class="inline-flex items-center gap-2 bg-rose-600 text-white font-extrabold px-4 py-1.5 rounded-lg text-sm animate-urgent-blink">
+              <span>🚨</span>
+              <span class="clue-target px-1">WARNNING! SYSTEM ALERT!</span>
+            </div>
+            <p class="clue-target text-base sm:text-lg font-extrabold text-slate-900 px-2 py-1">
+              You're computer has <span class="text-rose-600 underline">12 virusses</span>!
+              <span class="text-rose-600 underline">Downlaod</span>
+              <code class="bg-slate-900 text-amber-300 px-2 py-0.5 rounded font-mono-code text-sm">Super_Fixer.exe</code>
+              immediately to clean it!
+            </p>
+            <div>
+              <span class="inline-block bg-amber-400 border-2 border-slate-900 text-slate-950 font-extrabold px-5 py-2 rounded-xl text-sm pointer-events-none select-none">
+                ⬇ Downlaod Super_Fixer.exe
+              </span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 7,
+        contextLabel: "Friend's Chat Message",
+        isTrap: true,
+        shortTitle: "Suspicious Photo Link from BestFriend_Maya",
+        hint: "Even though the message comes from a friend's username, look at the strange `.xyz` link and why it asks for your game password.",
+        feedback: "TRAP! Red Flags #3 & #5: Hackers often steal a friend's account to send trick links. Do not click—tell Maya in person!",
+        renderViewport: () => `
+          <div class="bg-indigo-600 text-white px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">💬</span>
+              <span class="font-bold text-sm">Friend Chat — BestFriend_Maya</span>
+            </div>
+            <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded">Online</span>
+          </div>
+          <div class="p-5 sm:p-7 bg-slate-50">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-full bg-pink-500 text-white font-extrabold flex items-center justify-center shrink-0">
+                M
+              </div>
+              <div class="flex-1 bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-slate-900 text-sm">BestFriend_Maya</span>
+                  <span class="text-xs text-slate-400">2 mins ago</span>
+                </div>
+                <p class="text-sm sm:text-base text-slate-800 leading-relaxed">
+                  OMG look at this funny photo of you!! 👀
+                  <span class="clue-target font-bold text-rose-700 px-1">
+                    Log in with your game password at
+                    <span class="font-mono-code underline">www.secret-photo-viewer.xyz</span>
+                  </span>
+                  to see it!
+                </p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 8,
+        contextLabel: "Official In-App Security Notice",
+        isTrap: false,
+        shortTitle: "Scratch Official Account Security Notice",
+        hint: "Look at the official secure URL (`https://scratch.mit.edu`), notice there are NO links to click, and it tells you to ask a parent or teacher.",
+        feedback: "SAFE! All clear: This is a real safety alert inside the official website with no suspicious links or password requests.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="clue-target flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-emerald-800 border border-emerald-300 flex items-center gap-2">
+              <span title="Secure HTTPS">🔒</span>
+              <span>https://scratch.mit.edu/accounts/settings</span>
+            </div>
+          </div>
+          <div class="p-6 sm:p-8 bg-white space-y-3">
+            <div class="bg-sky-50 border-l-4 border-sky-500 p-4 rounded-r-xl space-y-2">
+              <div class="flex items-center gap-2 text-sky-900 font-extrabold text-base">
+                <span>🔔</span>
+                <span>Security Notice</span>
+              </div>
+              <p class="text-sm sm:text-base text-slate-800 leading-relaxed">
+                Your password was updated in Account Settings.
+                <span class="clue-target font-bold text-emerald-800 px-1">
+                  If you did not make this change, tell a parent or teacher right away.
+                </span>
+              </p>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 9,
+        contextLabel: "Gaming Generator Website",
+        isTrap: true,
+        shortTitle: "Free Skins Generator 2026 Website",
+        hint: "Check Step 1 & Step 2 on this generator page. Why would a 'free skins' website ask for your game password?",
+        feedback: "TRAP! 'Free' Trap + Phishing: Free skin and coin generators do not exist—they are designed to steal your account.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="clue-target flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-rose-700 border border-slate-300 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>www.free-skins-generator-2026.net</span>
+            </div>
+          </div>
+          <div class="p-5 sm:p-7 bg-gradient-to-b from-purple-900 to-indigo-950 text-white space-y-4">
+            <div class="text-center">
+              <span class="bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-0.5 rounded-full uppercase">100% Free Unlock</span>
+              <h4 class="text-lg sm:text-xl font-extrabold mt-1.5">✨ Rare Skins Generator 2026 ✨</h4>
+            </div>
+            <div class="clue-target max-w-md mx-auto bg-white/10 border border-white/20 rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
+              <div class="flex items-center justify-between bg-slate-900/70 px-3 py-2 rounded-lg">
+                <span class="text-cyan-300 font-bold">Step 1:</span>
+                <span>Enter your game username</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-900/70 px-3 py-2 rounded-lg">
+                <span class="text-rose-400 font-bold">Step 2:</span>
+                <span class="font-bold text-amber-200">Enter your password</span>
+              </div>
+              <div class="flex items-center justify-between bg-slate-900/70 px-3 py-2 rounded-lg">
+                <span class="text-emerald-300 font-bold">Step 3:</span>
+                <span>Click GENERATE to unlock all rare skins for FREE!</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 10,
+        contextLabel: "Colorful Pop-Up Quiz",
+        isTrap: true,
+        shortTitle: "Win a Gaming Console Personal Info Form",
+        hint: "Look at all the private details this pop-up asks you to type in order to win a free gaming console.",
+        feedback: "TRAP! Red Flags #1 & #5: Never share private personal information like your home address or phone number on random pop-ups.",
+        renderViewport: () => `
+          <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="flex-1 bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-mono-code text-slate-700 border border-slate-300 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>www.win-a-console-today.com</span>
+            </div>
+          </div>
+          <div class="p-5 sm:p-7 bg-gradient-to-br from-pink-50 via-purple-50 to-cyan-50 text-center space-y-4">
+            <h4 class="text-lg sm:text-xl font-extrabold text-purple-900">
+              🎮 Win a Brand-New Gaming Console! 🎮
+            </h4>
+            <p class="text-sm sm:text-base text-slate-800 font-medium">
+              Just type your
+              <span class="clue-target font-extrabold text-rose-700 px-1.5 py-0.5">
+                full name, home address, school name, and phone number
+              </span>
+              below to enter!
+            </p>
+            <div class="max-w-sm mx-auto grid grid-cols-2 gap-2 text-left text-xs text-slate-500">
+              <div class="bg-white border border-slate-300 rounded-lg px-3 py-2">Full Name...</div>
+              <div class="bg-white border border-slate-300 rounded-lg px-3 py-2">Home Address...</div>
+              <div class="bg-white border border-slate-300 rounded-lg px-3 py-2">School Name...</div>
+              <div class="bg-white border border-slate-300 rounded-lg px-3 py-2">Phone Number...</div>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    /**
+     * Application State
+     */
+    const state = {
+      deck: [],
+      currentIndex: 0,
+      score: 0,
+      shields: 3,
+      maxShields: 3,
+      backupMode: false,
+      answeredCurrent: false,
+      hintUsedCurrent: false,
+      results: [], // Tracks each case outcome for the final debrief screen
+      timerInterval: null
+    };
+
+    /**
+     * DOM Element References
+     */
+    const el = {
+      screenStart: document.getElementById('screen-start'),
+      screenGame: document.getElementById('screen-game'),
+      screenEnd: document.getElementById('screen-end'),
+      hudStats: document.getElementById('hud-stats'),
+      hudProgressWrapper: document.getElementById('hud-progress-wrapper'),
+      hudProgressBar: document.getElementById('hud-progress-bar'),
+      hudCaseCounter: document.getElementById('hud-case-counter'),
+      hudScore: document.getElementById('hud-score'),
+      shieldsContainer: document.getElementById('shields-container'),
+      backupShieldBanner: document.getElementById('backup-shield-banner'),
+      caseContextBadge: document.getElementById('case-context-badge'),
+      deviceWrapper: document.getElementById('device-wrapper'),
+      deviceViewport: document.getElementById('device-viewport'),
+      btnHint: document.getElementById('btn-hint'),
+      btnHintText: document.getElementById('btn-hint-text'),
+      hintBanner: document.getElementById('hint-banner'),
+      hintText: document.getElementById('hint-text'),
+      actionButtonsContainer: document.getElementById('action-buttons-container'),
+      btnChooseTrap: document.getElementById('btn-choose-trap'),
+      btnChooseSafe: document.getElementById('btn-choose-safe'),
+      feedbackCard: document.getElementById('feedback-card'),
+      feedbackIcon: document.getElementById('feedback-icon'),
+      feedbackTitle: document.getElementById('feedback-title'),
+      feedbackBadge: document.getElementById('feedback-badge'),
+      feedbackExplanation: document.getElementById('feedback-explanation'),
+      btnNextCase: document.getElementById('btn-next-case'),
+      btnNextText: document.getElementById('btn-next-text'),
+      // End screen
+      endRankIcon: document.getElementById('end-rank-icon'),
+      endRankTitle: document.getElementById('end-rank-title'),
+      endRankMessage: document.getElementById('end-rank-message'),
+      endScoreFraction: document.getElementById('end-score-fraction'),
+      endTotalPoints: document.getElementById('end-total-points'),
+      endShieldsLeft: document.getElementById('end-shields-left'),
+      endReviewList: document.getElementById('end-review-list'),
+      // Modal & Controls
+      modalRedFlags: document.getElementById('modal-red-flags'),
+      btnSoundToggle: document.getElementById('btn-sound-toggle')
+    };
+
+    /**
+     * Fisher-Yates Array Shuffle so replay gives a fresh sequence
+     */
+    function shuffleCases(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    /**
+     * Render Cyber Shields in HUD
+     */
+    function renderShields(animateBreakIndex = -1) {
+      el.shieldsContainer.innerHTML = '';
+      for (let i = 0; i < state.maxShields; i++) {
+        const isActive = i < state.shields;
+        const span = document.createElement('span');
+        span.className = `inline-flex items-center justify-center w-6 h-6 rounded-md text-sm transition-all ${
+          isActive
+            ? 'text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.65)]'
+            : 'text-slate-600 opacity-45 grayscale'
+        } ${i === animateBreakIndex ? 'animate-shield-break text-rose-400' : ''}`;
+        span.innerHTML = isActive ? '🛡️' : '💔';
+        span.title = isActive ? 'Active Cyber Shield' : 'Cracked Shield';
+        el.shieldsContainer.appendChild(span);
+      }
+    }
+
+    /**
+     * Update Top HUD Counters and Progress Bar
+     */
+    function updateHUD() {
+      const total = state.deck.length;
+      const currentNum = Math.min(state.currentIndex + 1, total);
+      el.hudCaseCounter.textContent = `${currentNum} of ${total}`;
+      el.hudScore.textContent = `${state.score * 100}`;
+      const pct = ((state.currentIndex + (state.answeredCurrent ? 1 : 0)) / total) * 100;
+      el.hudProgressBar.style.width = `${Math.max(8, pct)}%`;
+    }
+
+    /**
+     * Start or Restart a Full 10-Case Mission
+     */
+    function startMission(shouldShuffle = false) {
+      sfx.click();
+      state.deck = shouldShuffle ? shuffleCases(CASES_DATA) : [...CASES_DATA];
+      state.currentIndex = 0;
+      state.score = 0;
+      state.shields = 3;
+      state.backupMode = false;
+      state.answeredCurrent = false;
+      state.hintUsedCurrent = false;
+      state.results = [];
+
+      // Reset UI visibility
+      el.screenStart.classList.add('hidden');
+      el.screenEnd.classList.add('hidden');
+      el.screenGame.classList.remove('hidden');
+      el.hudStats.classList.remove('hidden');
+      el.hudStats.classList.add('flex');
+      el.hudProgressWrapper.classList.remove('hidden');
+      el.backupShieldBanner.classList.add('hidden');
+
+      renderShields();
+      loadCurrentCase();
+    }
+
+    /**
+     * Render Current Case into the Simulated Device Viewport
+     */
+    function loadCurrentCase() {
+      if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+      }
+
+      const currentCase = state.deck[state.currentIndex];
+      state.answeredCurrent = false;
+      state.hintUsedCurrent = false;
+
+      // Reset Hint & Feedback states
+      el.deviceWrapper.classList.remove('hint-active');
+      el.hintBanner.classList.add('hidden');
+      el.btnHint.disabled = false;
+      el.btnHint.classList.remove('opacity-60');
+      el.btnHintText.textContent = 'Magnifying Glass Hint';
+
+      el.feedbackCard.classList.add('hidden');
+      el.actionButtonsContainer.classList.remove('hidden');
+      el.btnChooseTrap.disabled = false;
+      el.btnChooseSafe.disabled = false;
+
+      // Populate Case Frame
+      el.caseContextBadge.textContent = currentCase.contextLabel;
+      el.deviceViewport.innerHTML = currentCase.renderViewport();
+
+      // Optional live ticking effect for Case 1 countdown timer (stops at 00:05 so it stays readable)
+      const timerEl = document.getElementById('case1-timer');
+      if (timerEl) {
+        let sec = 15;
+        state.timerInterval = setInterval(() => {
+          sec = sec > 5 ? sec - 1 : 15;
+          timerEl.textContent = `00:${sec < 10 ? '0' + sec : sec}`;
+        }, 1000);
+      }
+
+      updateHUD();
+    }
+
+    /**
+     * Activate Magnifying Glass Hint on the Current Case
+     */
+    function activateHint() {
+      if (state.hintUsedCurrent) return;
+      sfx.hint();
+      state.hintUsedCurrent = true;
+      const currentCase = state.deck[state.currentIndex];
+
+      el.deviceWrapper.classList.add('hint-active');
+      el.hintText.textContent = currentCase.hint;
+      el.hintBanner.classList.remove('hidden');
+      el.btnHintText.textContent = 'Clue Highlighted!';
+      el.btnHint.classList.add('opacity-75');
+    }
+
+    /**
+     * Evaluate Player's Decision ("TRAP" vs "SAFE")
+     */
+    function handleDecision(playerChoseTrap) {
+      if (state.answeredCurrent) return;
+      state.answeredCurrent = true;
+
+      if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+      }
+
+      const currentCase = state.deck[state.currentIndex];
+      const isCorrect = playerChoseTrap === currentCase.isTrap;
+
+      // Highlight clues automatically during review feedback
+      el.deviceWrapper.classList.add('hint-active');
+      el.actionButtonsContainer.classList.add('hidden');
+
+      if (isCorrect) {
+        sfx.correct();
+        state.score += 1;
+
+        el.feedbackCard.className = 'animate-enter rounded-3xl p-5 sm:p-6 border-2 shadow-2xl bg-emerald-950/90 border-emerald-400 text-emerald-50';
+        el.feedbackIcon.textContent = '🎯';
+        el.feedbackTitle.textContent = 'Spot On, Detective! (+100 pts)';
+        el.feedbackTitle.className = 'text-lg sm:text-xl font-extrabold text-emerald-300';
+        el.feedbackBadge.textContent = currentCase.isTrap ? 'TRAP SPOTTED' : 'VERIFIED SAFE';
+        el.feedbackBadge.className = 'text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-400 text-slate-950';
+        el.feedbackExplanation.textContent = currentCase.feedback;
+      } else {
+        sfx.wrong();
+        let brokenIdx = -1;
+        if (state.shields > 0) {
+          state.shields -= 1;
+          brokenIdx = state.shields;
+        }
+        renderShields(brokenIdx);
+
+        if (state.shields === 0 && !state.backupMode) {
+          state.backupMode = true;
+          el.backupShieldBanner.classList.remove('hidden');
+        }
+
+        el.feedbackCard.className = 'animate-enter rounded-3xl p-5 sm:p-6 border-2 shadow-2xl bg-rose-950/90 border-rose-400 text-rose-50';
+        el.feedbackIcon.textContent = '⚠️';
+        el.feedbackTitle.textContent = playerChoseTrap
+          ? 'False Alarm! This One Was Actually Safe'
+          : 'Watch Out! You Fell for a Cyber Trap';
+        el.feedbackTitle.className = 'text-lg sm:text-xl font-extrabold text-rose-300';
+        el.feedbackBadge.textContent = currentCase.isTrap ? 'IT WAS A TRAP' : 'IT WAS SAFE';
+        el.feedbackBadge.className = 'text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-rose-400 text-slate-950';
+        el.feedbackExplanation.textContent = currentCase.feedback;
+      }
+
+      // Record result for End Screen Debrief
+      state.results.push({
+        caseData: currentCase,
+        isCorrect,
+        playerChoseTrap
+      });
+
+      // Update Next button label if final case
+      const isLastCase = state.currentIndex === state.deck.length - 1;
+      el.btnNextText.textContent = isLastCase ? 'See Final Report' : 'Next Case';
+      el.feedbackCard.classList.remove('hidden');
+
+      updateHUD();
+    }
+
+    /**
+     * Advance to Next Case or Show End Screen
+     */
+    function advanceCase() {
+      sfx.click();
+      if (state.currentIndex < state.deck.length - 1) {
+        state.currentIndex += 1;
+        loadCurrentCase();
+      } else {
+        showEndScreen();
+      }
+    }
+
+    /**
+     * Render Final Mission Summary & Detective Rank Badge
+     */
+    function showEndScreen() {
+      sfx.victory();
+      el.screenGame.classList.add('hidden');
+      el.screenEnd.classList.remove('hidden');
+
+      const total = state.deck.length;
+      el.endScoreFraction.textContent = `${state.score} / ${total}`;
+      el.endTotalPoints.textContent = `${state.score * 100}`;
+      el.endShieldsLeft.textContent = state.backupMode ? 'Backup 🛡️' : `${state.shields} / ${state.maxShields}`;
+
+      // Assign Detective Rank based on score (9-10, 6-8, 0-5)
+      if (state.score >= 9) {
+        el.endRankIcon.textContent = '🏆';
+        el.endRankTitle.textContent = 'Master Code Detective';
+        el.endRankTitle.className = 'text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1';
+        el.endRankMessage.textContent = 'Outstanding cyber instincts! You spotted almost every digital trap and kept your personal secrets safe.';
+      } else if (state.score >= 6) {
+        el.endRankIcon.textContent = '🕵️';
+        el.endRankTitle.textContent = 'Senior Cyber Investigator';
+        el.endRankTitle.className = 'text-2xl sm:text-3xl font-extrabold text-cyan-300 mt-1';
+        el.endRankMessage.textContent = 'Great detective work! Review any missed cases below to sharpen your Red Flag radar even further.';
+      } else {
+        el.endRankIcon.textContent = '🛡️';
+        el.endRankTitle.textContent = 'Rookie Detective Trainee';
+        el.endRankTitle.className = 'text-2xl sm:text-3xl font-extrabold text-emerald-300 mt-1';
+        el.endRankMessage.textContent = 'Good training run, Agent! Read the clues in the Case Review below and play again to level up your rank.';
+      }
+
+      // Sort missed cases first so learners immediately see what to review, followed by solved cases
+      const sortedResults = [...state.results].sort((a, b) => Number(a.isCorrect) - Number(b.isCorrect));
+
+      el.endReviewList.innerHTML = '';
+      sortedResults.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = `rounded-2xl p-4 border ${
+          item.isCorrect
+            ? 'bg-slate-800/65 border-slate-700/80'
+            : 'bg-rose-950/45 border-rose-500/50'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="text-base">${item.isCorrect ? '✅' : '❌'}</span>
+              <span class="font-extrabold text-white text-sm sm:text-base">${item.caseData.shortTitle}</span>
+            </div>
+            <span class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
+              item.caseData.isTrap
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
+                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+            }">
+              Actual: ${item.caseData.isTrap ? 'TRAP' : 'SAFE'}
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">${item.caseData.feedback}</p>
+        `;
+        el.endReviewList.appendChild(card);
+      });
+    }
+
+    /**
+     * Event Listeners
+     */
+    document.getElementById('btn-start-game').addEventListener('click', () => startMission(false));
+    document.getElementById('btn-play-again').addEventListener('click', () => startMission(true));
+
+    el.btnHint.addEventListener('click', activateHint);
+    el.btnChooseTrap.addEventListener('click', () => handleDecision(true));
+    el.btnChooseSafe.addEventListener('click', () => handleDecision(false));
+    el.btnNextCase.addEventListener('click', advanceCase);
+
+    // 5 Red Flags Guide Modal controls
+    document.getElementById('btn-open-guide').addEventListener('click', () => {
+      sfx.click();
+      el.modalRedFlags.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-guide').addEventListener('click', () => {
+      sfx.click();
+      el.modalRedFlags.classList.add('hidden');
+    });
+    document.getElementById('btn-close-guide-bottom').addEventListener('click', () => {
+      sfx.click();
+      el.modalRedFlags.classList.add('hidden');
+    });
+    el.modalRedFlags.addEventListener('click', (e) => {
+      if (e.target === el.modalRedFlags) {
+        el.modalRedFlags.classList.add('hidden');
+      }
+    });
+
+    // Sound Toggle button
+    el.btnSoundToggle.addEventListener('click', () => {
+      sfx.enabled = !sfx.enabled;
+      el.btnSoundToggle.textContent = sfx.enabled ? '🔊' : '🔇';
+      if (sfx.enabled) sfx.click();
+    });
+
+    // Friendly Keyboard Navigation for Desktop Classrooms
+    document.addEventListener('keydown', (e) => {
+      if (!el.modalRedFlags.classList.contains('hidden')) {
+        if (e.key === 'Escape') el.modalRedFlags.classList.add('hidden');
+        return;
+      }
+      if (el.screenGame.classList.contains('hidden')) return;
+
+      if (!state.answeredCurrent) {
+        if (e.key === '1' || e.key === 'ArrowLeft') {
+          handleDecision(true);
+        } else if (e.key === '2' || e.key === 'ArrowRight') {
+          handleDecision(false);
+        } else if (e.key.toLowerCase() === 'h') {
+          activateHint();
+        }
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        advanceCase();
+      }
+    });
+  </script>
+</body>
+</html>
